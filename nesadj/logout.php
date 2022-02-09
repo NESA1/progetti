@@ -1,0 +1,7 @@
+<?php include "_conf.php";
+ob_start();
+session_start();
+session_destroy();
+header('location: index.php');
+ob_flush();
+?>
