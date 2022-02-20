@@ -1,5 +1,5 @@
 <?php
-//include "_conf.php";
+include "_conf.php";
 session_start(); 
 ob_start();
 ?>
@@ -166,6 +166,7 @@ ob_start();
     nav{  
     font-family: sans-serif;
     background: #181925 !important; 
+    width: 100%;
     padding: 5px 20px;
     }
 
@@ -251,26 +252,215 @@ ob_start();
     transition: width 0.4s ease-in-out;
     color: #DEDEDE;
     }
-  }
+    }
     .bi-search{
     color: #DEDEDE;
     left: 21%;
     }
-    .po{
-    width: 100%;
-    height: 100%;
-    right: 100%;
-    background: #000;  
-    }
     @media all and (max-width: 900px) {
-      .form-control{
-    opacity: 0%;
+    .form-control{
+    display: none;
     }
     .form-control:focus{
-    opacity: 0%;
+    display: none;
     }
-  }
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 111%;
+    padding: 5px 20px;
+    }
+    }
+    @media all and (max-width: 400px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 130%;
+    padding: 5px 20px;
+    }
+    }
+    @media all and (max-width: 342px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 150%;
+    padding: 5px 20px;
+    }  
+    }
+    @media all and (max-width: 300px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 170%;
+    padding: 5px 20px;
+    }  
+    }
+    @media all and (max-width: 260px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 190%;
+    padding: 5px 20px;
+    }  
+    }
+    @media all and (max-width: 235px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 220%;
+    padding: 5px 20px;
+    }  
+    }
+    @media all and (max-width: 220px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 240%;
+    padding: 5px 20px;
+    }  
+    }
+    @media all and (max-width: 185px) {
+    nav{  
+    font-family: sans-serif;
+    background: #181925 !important; 
+    width: 280%;
+    padding: 5px 20px;
+    }  
+    }
+    .rounded-circle:hover{
+    border: #DEDEDE;
+    }
+    .rounded-circle{
+    
+    border: #DEDEDE;
+    }
+    .dropdown-menu{
+      
+    }
 </style>
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('max_execution_time', 300); //300 seconds = 5 minutes. In case if your CURL is slow and is loading too much (Can be IPv6 problem)
+
+error_reporting(E_ALL);
+
+define('OAUTH2_CLIENT_ID', '945051636483633182');
+define('OAUTH2_CLIENT_SECRET', 'VsL-K2LKE7jbK7USWFLc-EkP8J0wH2jI');
+
+$authorizeURL = 'https://discord.com/api/oauth2/authorize';
+$tokenURL = 'https://discord.com/api/oauth2/token';
+$apiURLBase = 'https://discord.com/api/users/@me';
+$revokeURL = 'https://discord.com/api/oauth2/token/revoke';
+
+if(get('action') == 'logout') {
+logout($revokeURL, array(
+'token' => session('access_token'),
+'token_type_hint' => 'access_token',
+'client_id' => 945051636483633182,
+'client_secret' => 'VsL-K2LKE7jbK7USWFLc-EkP8J0wH2jI',
+));
+unset($_SESSION['access_token']);
+header('Location: ' . $_SERVER['PHP_SELF']);
+die();
+}
+
+
+
+// Start the login process by sending the user to Discord's authorization page
+if(get('action') == 'login') {
+
+$params = array(
+'client_id' => 945051636483633182,
+'redirect_uri' => 'http://localhost/aa_progetto_discord/inserimento_db.php',
+'response_type' => 'code',
+'scope' => 'identify guilds'
+);
+
+  // Redirect the user to Discord's authorization page
+  header('Location: https://discord.com/api/oauth2/authorize' . '?' . http_build_query($params));
+  die();
+}
+
+
+// When Discord redirects the user back here, there will be a "code" and "state" parameter in the query string
+if(get('code')) {
+
+  // Exchange the auth code for a token
+$token = apiRequest($tokenURL, array(
+"grant_type" => "authorization_code",
+'client_id' => 945051636483633182,
+'client_secret' => 'VsL-K2LKE7jbK7USWFLc-EkP8J0wH2jI',
+'redirect_uri' => 'http://localhost/aa_progetto_discord/inserimento_db.php',
+'code' => get('code')
+));
+$logout_token = $token->access_token;
+$_SESSION['access_token'] = $token->access_token;
+
+
+header('Location: ' . $_SERVER['PHP_SELF']);
+}
+
+
+
+
+if(get('action') == 'logout') {
+// This should logout you
+logout($revokeURL, array(
+'token' => session('access_token'),
+'token_type_hint' => 'access_token',
+'client_id' => 945051636483633182,
+'client_secret' => 'VsL-K2LKE7jbK7USWFLc-EkP8J0wH2jI',
+));
+unset($_SESSION['access_token']);
+header('Location: ' . $_SERVER['PHP_SELF']);
+die();
+}
+
+function apiRequest($url, $post=FALSE, $headers=array()) {
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+
+$response = curl_exec($ch);
+
+
+if($post)
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
+
+$headers[] = 'Accept: application/json';
+
+if(session('access_token'))
+$headers[] = 'Authorization: Bearer ' . session('access_token');
+
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+$response = curl_exec($ch);
+return json_decode($response);
+}
+
+function logout($url, $data=array()) {
+$ch = curl_init($url);
+curl_setopt_array($ch, array(
+CURLOPT_POST => TRUE,
+CURLOPT_RETURNTRANSFER => TRUE,
+CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+CURLOPT_HTTPHEADER => array('Content-Type: application/x-www-form-urlencoded'),
+CURLOPT_POSTFIELDS => http_build_query($data),
+));
+$response = curl_exec($ch);
+return json_decode($response);
+}
+
+function get($key, $default=NULL) {
+return array_key_exists($key, $_GET) ? $_GET[$key] : $default;
+}
+
+function session($key, $default=NULL) {
+return array_key_exists($key, $_SESSION) ? $_SESSION[$key] : $default;
+}
+//$username = $user->username
+?>
 </head>
 <nav class="navbar navbar-expand navbar-dark  mb-4">
   <div class="space">
@@ -299,11 +489,34 @@ ob_start();
   </ul>  
   <ul class="navbar-nav">
   <li class="nav-item">
-    <div class="po">
-      <button type="button" class="btn" style="background: #181925;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Esegui il login con discord">
-        <i class="fa-solid fa-right-to-bracket fa-2xl" style="color: #F2F2F2;"></i>
-      </div>
-  </button>
+  <?php
+  if(session('access_token')) {
+  $user = apiRequest($apiURLBase); 
+if(isset($user->avatar)){
+  
+echo '<div class="btn-group dropleft">
+<button type="button" class="btn dropdown-toggle" style="background: #181925 !important;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<img class="rounded-circle" src="https://cdn.discordapp.com/avatars/'. $user->id. '/'. $user->avatar .'.webp" alt="'. $user->username.'" height="50px" />
+</button>
+<div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+<button class="dropdown-item" type="button">Action</button>
+<button class="dropdown-item" type="button">Another action</button>
+<button class="dropdown-item" type="button">Something else here</button>
+</div>
+</div>';    
+} else {
+  echo '<a href="account.php"><img class="rounded-circle" src="https://www.apkmirror.com/wp-content/uploads/2021/11/17/61a5ba0a77bc8-384x384.png" height="40px" /></a>';
+}
+  } else {
+  echo '<div class="po">
+  <a href="?action=login">
+  <button type="button" class="btn" style="background: #181925;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Esegui il login con discord">
+  <i class="fa-solid fa-right-to-bracket fa-2xl" style="color: #F2F2F2;"></i>
+  </a>
+  </div>
+  </button>';
+  }
+  ?>
   </li>
   </ul>
   </div>
